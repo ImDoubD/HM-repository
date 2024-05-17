@@ -1,0 +1,72 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Web Scraper</title>
+</head>
+<body>
+    <h1>Web Scraper</h1>
+    <button id="scrape">Scrape</button>
+    <button id="download">Download</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#scrape').off('click').on('click', function() {
+            $.get('/scrape', function(data) {
+                alert(data);
+            });
+        });
+    
+        $('#download').off('click').on('click', function() {
+            window.location.href = '/download';
+        });
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Scraper</title>
+</head>
+<body>
+    <h1>Web Scraper</h1>
+    <label for="source">Select Source:</label>
+    <select id="source">
+        <option value="subbrang">Subbrang</option>
+        <option value="amazon">Amazon</option>
+    </select>
+    <input type="text" id="keyword" placeholder="Enter keyword" disabled> <!-- Disable input field initially -->
+    <button id="scrape">Scrape</button>
+    <button id="download">Download</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#source').on('change', function() {
+            const selectedSource = $(this).val();
+            $('#keyword').prop('disabled', selectedSource === 'subbrang');
+        });
+
+        $('#scrape').off('click').on('click', function() {
+            const source = $('#source').val();
+            const keyword = $('#keyword').val();
+
+            if (source === 'subbrang') {
+                $.get('/scrape?source=subbrang', function(data) {
+                    alert(data);
+                });
+            } else if (source === 'amazon') {
+                $.get(`/scrape?source=amazon&keyword=${encodeURIComponent(keyword)}`, function(data) {
+                    alert(data);
+                });
+            }
+        });
+
+        $('#download').off('click').on('click', function() {
+            window.location.href = '/download';
+        });
+    </script>
+</body>
+</html>
+
+
+
