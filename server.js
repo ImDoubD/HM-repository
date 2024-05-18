@@ -89,7 +89,6 @@ app.get('/scrape', async (req, res) => {
         });
     }
     else if (source === 'amazon') {
-        const products = [];
         const browser = await puppeteer.launch();
         try {
             const page = await browser.newPage();
@@ -138,22 +137,23 @@ app.get('/scrape', async (req, res) => {
             
 
             // Save scraped data to the SQLite3 database
-            // db.serialize(() => {
-            //     db.run('DROP TABLE IF EXISTS products'); // Drop the existing table if it exists
-            //     db.run('CREATE TABLE IF NOT EXISTS products (name TEXT, price TEXT, image TEXT, description TEXT)');
-
-            //     db.run('DELETE FROM products', function(err) {
-            //         if (err) {
-            //             return console.error(err.message);
-            //         }
-            //         console.log(`Deleted ${this.changes} rows`);
-            //     });
-            //     const stmt = db.prepare('INSERT INTO products VALUES (?, ?, ?, ?)');
-            //     for (const product of products) {
-            //         stmt.run(product.name, product.price, product.image, product.description);
-            //     }
-            //     stmt.finalize();
-            // });
+            db.serialize(() => {
+                db.run('DROP TABLE IF EXISTS products'); // Drop the existing table if it exists
+                db.run('CREATE TABLE IF NOT EXISTS products (name TEXT, price TEXT, description TEXT, image TEXT)'); // Create the table with the correct columns
+            
+                db.run('DELETE FROM products', function(err) {
+                    if (err) {
+                        return console.error(err.message);
+                    }
+                    console.log(`Deleted ${this.changes} rows`);
+                });
+                const stmt = db.prepare('INSERT INTO products VALUES (?, ?, ?, ?)');
+                for (let product of products) {
+                    stmt.run(product.name, product.price, product.description, product.image);
+                }
+                stmt.finalize();
+                res.send('Scraping done!');
+            });
 
             console.log(`Scraped ${products.length} products`);
             // return productLinks;
