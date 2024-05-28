@@ -113,18 +113,90 @@ app.get('/scrape', async (req, res) => {
             const products = [];
             // const addedProductNames = new Set();
             // var count=10;
+
+            const csvStream = csv.format({ headers: true });
+            const writableStream = fs.createWriteStream('product_template.csv');
+
+            writableStream.on('finish', function () {
+                console.log('Write to product_template.csv completed.');
+            });
+
+            csvStream.pipe(writableStream);
+
             for (const url of limitedLinks) {
                 await page.goto(url, { waitUntil: 'domcontentloaded' });
 
                 const name = await page.$eval('#titleSection #productTitle', (element) => element.textContent.trim());
                 const image = await page.$eval('#imgTagWrapperId img', (element) => element.src);
-                const description = await page.$eval('#feature-bullets ul', (element) => element.textContent.trim());
+                const description = await page.$eval('#feature-bullets ul', (element) => {
+                    let rawDescription = element.textContent.trim();
+                    // Replace newline characters with spaces to form a single paragraph
+                    let paragraphDescription = rawDescription.replace(/\n/g, ' ');
+                    return paragraphDescription;
+                });
+                
+                
                 const price = await page.$eval('#twister-plus-price-data-price', (element) => element.value);
                 
                 
                 if (name && price && image && description) {
                     products.push({ name, price, image, description });
                     // addedProductNames.add(name);
+                    csvStream.write({ 
+                        'Handle':'',
+                        'Title': name, 
+                        'Body (HTML)': description, 
+                        'Vendor':'',
+                        'Product Category':'',
+                        'Type':'',
+                        'Tags':'',
+                        'Published':'',
+                        'Option1 Name':'',
+                        'Option1 Value':'',
+                        'Option2 Name':'',
+                        'Option2 Value':'',
+                        'Option3 Name':'',
+                        'Option3 Value':'',
+                        'Option3 Value':'',
+                        'Variant SKU':'',
+                        'Variant Grams':'',
+                        'Variant Inventory Tracker':'',
+                        'Variant Inventory Qty':'',
+                        'Variant Inventory Policy':'',
+                        'Variant Fulfillment Service':'',
+                        'Variant Fulfillment Service':'',
+                        'Variant Price':'',
+                        'Variant Compare At Price':'',
+                        'Variant Requires Shipping':'',
+                        'Variant Taxable':'',
+                        'Variant Barcode':'',
+                        'Variant Barcode':'',
+                        'Image Src': image, 
+                        'Image Position': '', 
+                        'Image Alt Text': '', 
+                        'Gift Card': '', 
+                        'SEO Title': '', 
+                        'SEO Description': '', 
+                        'Google Shopping / Google Product Category': '', 
+                        'Google Shopping / Gender': '', 
+                        'Google Shopping / Age Group': '', 
+                        'Google Shopping / MPN': '', 
+                        'Google Shopping / AdWords Grouping': '',   
+                        'Google Shopping / Condition': '',   
+                        'Google Shopping / Custom Product': '',   
+                        'Google Shopping / Custom Label 0': '',   
+                        'Google Shopping / Custom Label 1': '',   
+                        'Google Shopping / Custom Label 2': '',   
+                        'Google Shopping / Custom Label 3': '',   
+                        'Google Shopping / Custom Label 4': '',   
+                        'Variant Image': '',   
+                        'Variant Weight Unit': '',   
+                        'Variant Tax Code': '',   
+                        'Cost per item': '',   
+                        'Price / International': price ,
+                        'Compare At Price / International': '',
+                        'Status': '',
+                    });
                 }
                 
                 // Stop if we've already added 10 unique products
@@ -155,6 +227,7 @@ app.get('/scrape', async (req, res) => {
                 res.send('Scraping done!');
             });
 
+            csvStream.end();
             console.log(`Scraped ${products.length} products`);
             // return productLinks;
         } catch (error) {
